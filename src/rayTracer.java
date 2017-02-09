@@ -7,7 +7,6 @@ import java.util.ArrayList;
  */
 public class rayTracer {
 
-
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         float distance;
         float D = face.getNormal().dotProduct(face.getVertices().get(0));
@@ -19,18 +18,16 @@ public class rayTracer {
         } else {
             distance = (D - rayOrigin.dotProduct(face.getNormal())) / divisor;
             //System.out.println(distance);
-            if(distance < 0.00004f){
-                return null;
-            }
             return rayDirection.multiply(distance).add(rayOrigin);
         }
     }
 
-    private boolean triangleIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
+    private Float triangleIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         Vertex cords = planeIntersect(face, rayOrigin, rayDirection);
         if(cords == null){
-            return false;
+            return null;
         } else {
+
             Vertex u = face.getVertices().get(1).subtract(face.getVertices().get(0));
             Vertex v = face.getVertices().get(2).subtract(face.getVertices().get(0));
             Vertex w = cords.subtract(face.getVertices().get(0));
@@ -50,25 +47,35 @@ public class rayTracer {
             }
 
             if (r < 0.0f || r > 1.0f || t < 0.0f || r + t > 1.0f) {
-                return false;
+                return null;
             }
 
-            Vertex bCords = new Vertex(r, t, 0);
+            Float distance = (float)Math.sqrt(Math.pow(rayOrigin.getX() - cords.getX(), 2) +
+                    Math.pow(rayOrigin.getY() - cords.getY(), 2) +
+                    Math.pow(rayOrigin.getZ() - cords.getZ(), 2));
 
-            return true;
+            return distance;
         }
 
     }
 
     private Color trace(Vertex rayOrigin, Vertex rayDirection, ArrayList<Object3D> list){
+        float minDistance = Float.MAX_VALUE;
+        Material clostestMaterial = null;
         for(Object3D o: list){
             for(Face f: o.getFaces()){
-                if(triangleIntersect(f, rayOrigin, rayDirection)){
-                    return Color.black;
+                Float distance = triangleIntersect(f, rayOrigin, rayDirection);
+                if(distance != null && distance < minDistance){
+                    clostestMaterial = o.getMaterial();
+                    minDistance = distance;
                 }
             }
         }
-        return Color.white;
+        if(clostestMaterial == null) {
+            return Color.black;
+        } else {
+            return clostestMaterial.getKd();
+        }
     }
 
     public BufferedImage rayTrace(int width, int height, ArrayList<Object3D> list){

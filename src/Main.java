@@ -1,6 +1,5 @@
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -12,11 +11,7 @@ public class Main {
 
     public static void main(String[] args){
 
-        try{
-            list = createObject3D.read(new File("cube.obj"));
-        } catch(IOException e){
-            e.printStackTrace();
-        }
+        list = createObject3D.read(new File("cube.obj"), new File("cube.mtl"));
 
         /*for(Object3D o: list){
             System.out.println(o.getName());

@@ -5,20 +5,13 @@ import java.util.ArrayList;
  */
 public class Object3D {
     String name;
-    String material;
+    Material material;
     ArrayList<Vertex> vertices = new ArrayList<>();
     ArrayList<Vertex> normals = new ArrayList<>();
     ArrayList<Face> faces = new ArrayList<>();
 
     public Object3D(String name) {
         this.name = name;
-    }
-
-    public Object3D(String name, String material, ArrayList<Vertex> vertices, ArrayList<Vertex> normals){
-        this.name = name;
-        this.material = material;
-        this.vertices = vertices;
-        this.normals = normals;
     }
 
     public void addFace(int index, ArrayList<Integer> faceIndices){
@@ -33,7 +26,7 @@ public class Object3D {
         return name;
     }
 
-    public String getMaterial() {
+    public Material getMaterial() {
         return material;
     }
 
@@ -49,7 +42,7 @@ public class Object3D {
         return normals;
     }
 
-    public void setMaterial(String material) {
+    public void setMaterial(Material material) {
         this.material = material;
     }
 
