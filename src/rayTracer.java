@@ -1,4 +1,3 @@
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -6,6 +5,8 @@ import java.util.ArrayList;
  * Created by meesb on 2/9/2017.
  */
 public class rayTracer {
+
+    Vertex light = new Vertex(2.1f, -6.0f, 2.8f);
 
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         float distance;
@@ -22,7 +23,7 @@ public class rayTracer {
         }
     }
 
-    private Float triangleIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
+    private shadeInfo triangleIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         Vertex cords = planeIntersect(face, rayOrigin, rayDirection);
         if(cords == null){
             return null;
@@ -51,30 +52,55 @@ public class rayTracer {
             }
 
             Float distance = (float)Math.sqrt(Math.pow(rayOrigin.getX() - cords.getX(), 2) +
-                    Math.pow(rayOrigin.getY() - cords.getY(), 2) +
-                    Math.pow(rayOrigin.getZ() - cords.getZ(), 2));
+                                              Math.pow(rayOrigin.getY() - cords.getY(), 2) +
+                                              Math.pow(rayOrigin.getZ() - cords.getZ(), 2));
 
-            return distance;
+            Vertex bCords = new Vertex(r, t, 0);
+
+            shadeInfo si = new shadeInfo();
+            si.setbCord(bCords);
+            si.setDistance(distance);
+            si.setFace(face);
+            si.setHitpoint(cords);
+
+            return si;
         }
 
     }
 
-    private Color trace(Vertex rayOrigin, Vertex rayDirection, ArrayList<Object3D> list){
+    private Color3D directLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si){
+        Vertex direction = light.subtract(si.getHitpoint());
+        direction.normalize();
+        float intensity = si.getFace().getNormal().dotProduct(direction);
+
+        if(intensity < 0){
+            return new Color3D(0, 0, 0);
+        }
+
+        return si.getMaterial().getKd().multiply(intensity);
+    }
+
+    private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
+        return directLight(rayOrigin, rayDirection, si);
+    }
+
+    private Color3D trace(Vertex rayOrigin, Vertex rayDirection, ArrayList<Object3D> list){
         float minDistance = Float.MAX_VALUE;
-        Material clostestMaterial = null;
+        shadeInfo clostest = null;
         for(Object3D o: list){
             for(Face f: o.getFaces()){
-                Float distance = triangleIntersect(f, rayOrigin, rayDirection);
-                if(distance != null && distance < minDistance){
-                    clostestMaterial = o.getMaterial();
-                    minDistance = distance;
+                shadeInfo temp = triangleIntersect(f, rayOrigin, rayDirection);
+                if(temp != null && temp.getDistance() < minDistance){
+                    temp.setMaterial(o.getMaterial());
+                    clostest = temp;
+                    minDistance = temp.getDistance();
                 }
             }
         }
-        if(clostestMaterial == null) {
-            return Color.black;
+        if(clostest == null) {
+            return new Color3D(0, 0, 0);
         } else {
-            return clostestMaterial.getKd();
+            return shade(rayOrigin, rayDirection, clostest);
         }
     }
 

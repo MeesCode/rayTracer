@@ -95,25 +95,25 @@ public class createObject3D {
             }
 
             if(parts[0].equals("Ka")){
-                materials.get(materials.size()-1).setKa(new Color((int)(Float.parseFloat(parts[1])*255),
+                materials.get(materials.size()-1).setKa(new Color3D((int)(Float.parseFloat(parts[1])*255),
                                                                   (int)(Float.parseFloat(parts[2])*255),
                                                                   (int)(Float.parseFloat(parts[3])*255)));
             }
 
             if(parts[0].equals("Kd")){
-                materials.get(materials.size()-1).setKd(new Color((int)(Float.parseFloat(parts[1])*255),
+                materials.get(materials.size()-1).setKd(new Color3D((int)(Float.parseFloat(parts[1])*255),
                         (int)(Float.parseFloat(parts[2])*255),
                         (int)(Float.parseFloat(parts[3])*255)));
             }
 
             if(parts[0].equals("Ks")){
-                materials.get(materials.size()-1).setKs(new Color((int)(Float.parseFloat(parts[1])*255),
+                materials.get(materials.size()-1).setKs(new Color3D((int)(Float.parseFloat(parts[1])*255),
                         (int)(Float.parseFloat(parts[2])*255),
                         (int)(Float.parseFloat(parts[3])*255)));
             }
 
             if(parts[0].equals("Ke")){
-                materials.get(materials.size()-1).setKe(new Color((int)(Float.parseFloat(parts[1])*255),
+                materials.get(materials.size()-1).setKe(new Color3D((int)(Float.parseFloat(parts[1])*255),
                         (int)(Float.parseFloat(parts[2])*255),
                         (int)(Float.parseFloat(parts[3])*255)));
             }

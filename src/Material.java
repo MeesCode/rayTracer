@@ -6,10 +6,10 @@ import java.awt.*;
 public class Material {
     private String name;
     private float Ns;
-    private Color Ka;
-    private Color Kd;
-    private Color Ks;
-    private Color Ke;
+    private Color3D Ka;
+    private Color3D Kd;
+    private Color3D Ks;
+    private Color3D Ke;
     private float Ni;
     private float d;
     private int illum;
@@ -38,15 +38,15 @@ public class Material {
         return Ka;
     }
 
-    public void setKa(Color ka) {
+    public void setKa(Color3D ka) {
         Ka = ka;
     }
 
-    public Color getKd() {
+    public Color3D getKd() {
         return Kd;
     }
 
-    public void setKd(Color kd) {
+    public void setKd(Color3D kd) {
         Kd = kd;
     }
 
@@ -54,7 +54,7 @@ public class Material {
         return Ks;
     }
 
-    public void setKs(Color ks) {
+    public void setKs(Color3D ks) {
         Ks = ks;
     }
 
@@ -62,7 +62,7 @@ public class Material {
         return Ke;
     }
 
-    public void setKe(Color ke) {
+    public void setKe(Color3D ke) {
         Ke = ke;
     }
 
