@@ -17,12 +17,10 @@ public class Main {
         rayTracer r = new rayTracer();
 
         Vertex cameraOrigin = new Vertex(0, -1, 3);
-        Vertex cameraDirection = new Vertex(0, 1, -.3f);
+        Vertex cameraDirection = new Vertex(-.1f, 1, -.3f);
         cameraDirection.normalize();
 
         w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list));
-
-        //r.rayTraceTest(list);
 
     }
 

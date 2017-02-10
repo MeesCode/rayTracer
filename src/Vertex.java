@@ -13,6 +13,12 @@ public class Vertex {
         this.z = z;
     }
 
+    public Vertex(Vertex v){
+        this.x = v.getX();
+        this.y = v.getY();
+        this.z = v.getZ();
+    }
+
     public float getX() {
         return x;
     }

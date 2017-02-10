@@ -6,8 +6,11 @@ import java.util.ArrayList;
  */
 public class rayTracer {
 
-    Vertex light = new Vertex(-1, 2, 3);
+    ArrayList<Object3D> list = new ArrayList<>();
+    Vertex light = new Vertex(-2, 2, 3);
     float fov = 0.002f;
+    float threshold = 0.00001f;
+    float ambientLight = 0.1f;
 
     Vertex cameraOrigin;
     Vertex cameraDirection;
@@ -74,6 +77,7 @@ public class rayTracer {
     }
 
     private Color3D directLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si){
+
         Vertex direction = light.subtract(si.getHitpoint());
         direction.normalize();
         float intensity = si.getFace().getNormal().dotProduct(direction);
@@ -103,11 +107,39 @@ public class rayTracer {
         return si.getMaterial().getKs().multiply(intensity);
     }
 
+    public boolean isShadow(Vertex hitPoint){
+        float minDistance = Float.MAX_VALUE;
+        Vertex direction = new Vertex(hitPoint).subtract(light);
+        direction.normalize();
+        shadeInfo closest = null;
+        for(Object3D o: list){
+            for(Face f: o.getFaces()){
+                shadeInfo temp = triangleIntersect(f, light, direction);
+                if(temp != null && temp.getDistance() < minDistance){
+                    closest = temp;
+                    minDistance = temp.getDistance();
+                }
+            }
+        }
+        if(closest != null &&
+                (Math.abs(hitPoint.getX() - closest.getHitpoint().getX()) > threshold ||
+                Math.abs(hitPoint.getY() - closest.getHitpoint().getY()) > threshold ||
+                Math.abs(hitPoint.getZ() - closest.getHitpoint().getZ()) > threshold)){
+            return true;
+        }
+        return false;
+    }
+
     private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
+
         //smooth shading
         si.getFace().setNormal(smoothNormal(si));
 
         Color3D directLight = directLight(rayOrigin, rayDirection, si);
+        if(isShadow(si.getHitpoint())){
+            return directLight.multiply(ambientLight);
+        }
+
         Color3D specularLight = specularLight(rayOrigin, rayDirection, si);
         return directLight.add(specularLight);
     }
@@ -132,29 +164,30 @@ public class rayTracer {
         return result;
     }
 
-    private Color3D trace(Vertex rayOrigin, Vertex rayDirection, ArrayList<Object3D> list){
+    private Color3D trace(Vertex rayOrigin, Vertex rayDirection){
         float minDistance = Float.MAX_VALUE;
-        shadeInfo clostest = null;
+        shadeInfo closest = null;
         for(Object3D o: list){
             for(Face f: o.getFaces()){
                 shadeInfo temp = triangleIntersect(f, rayOrigin, rayDirection);
                 if(temp != null && temp.getDistance() < minDistance){
                     temp.setMaterial(o.getMaterial());
-                    clostest = temp;
+                    closest = temp;
                     minDistance = temp.getDistance();
                 }
             }
         }
-        if(clostest == null) {
+        if(closest == null) {
             return new Color3D(0, 0, 0);
         } else {
-            return shade(rayOrigin, rayDirection, clostest);
+            return shade(rayOrigin, rayDirection, closest);
         }
     }
 
     public BufferedImage rayTrace(int width, int height, Vertex cameraOrigin, Vertex cameraDirection, ArrayList<Object3D> list){
         this.cameraOrigin = cameraOrigin;
         this.cameraDirection = cameraDirection;
+        this.list = list;
 
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for(float z = (height/2)-1; z >= -height/2; z -= 1){
@@ -162,13 +195,9 @@ public class rayTracer {
                 Vertex dest = cameraDirection.subtract(new Vertex(-x*fov, 0, z*fov));
                 dest.normalize();
                 //System.out.println(dest.toString());
-                bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(cameraOrigin, dest, list).getRGB());
+                bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(cameraOrigin, dest).getRGB());
             }
         }
         return bi;
-    }
-
-    public void rayTraceTest(ArrayList<Object3D> list){
-        System.out.println(trace(Vertex.NULL, new Vertex(0,0,1), list).toString());
     }
 }
