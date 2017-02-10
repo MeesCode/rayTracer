@@ -6,7 +6,8 @@ import java.util.ArrayList;
  */
 public class rayTracer {
 
-    Vertex light = new Vertex(2.1f, -6.0f, 2.8f);
+    Vertex light = new Vertex(0, -1.5f, 1);
+    float fov = 0.002f;
 
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         float distance;
@@ -18,6 +19,9 @@ public class rayTracer {
             return null;
         } else {
             distance = (D - rayOrigin.dotProduct(face.getNormal())) / divisor;
+            if(distance > 0){
+                return null;
+            }
             //System.out.println(distance);
             return rayDirection.multiply(distance).add(rayOrigin);
         }
@@ -60,7 +64,7 @@ public class rayTracer {
             shadeInfo si = new shadeInfo();
             si.setbCord(bCords);
             si.setDistance(distance);
-            si.setFace(face);
+            si.setFace(face.copy());
             si.setHitpoint(cords);
 
             return si;
@@ -81,7 +85,28 @@ public class rayTracer {
     }
 
     private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
+        si.getFace().setNormal(smoothNormal(si));
         return directLight(rayOrigin, rayDirection, si);
+    }
+
+    public Vertex smoothNormal(shadeInfo si){
+
+        Vertex n0 = si.getFace().getVertices().get(0).getVertexNormal();
+        Vertex n1 = si.getFace().getVertices().get(1).getVertexNormal();
+        Vertex n2 = si.getFace().getVertices().get(2).getVertexNormal();
+
+        n0.normalize();
+        n1.normalize();
+        n2.normalize();
+
+        Vertex t1 = n0.multiply(1 - si.getbCord().getX() - si.getbCord().getY());
+        Vertex t2 = n1.multiply(si.getbCord().getX());
+        Vertex t3 = n2.multiply(si.getbCord().getY());
+
+        Vertex result = t1.add(t2).add(t3);
+        result.normalize();
+
+        return result;
     }
 
     private Color3D trace(Vertex rayOrigin, Vertex rayDirection, ArrayList<Object3D> list){
@@ -104,14 +129,14 @@ public class rayTracer {
         }
     }
 
-    public BufferedImage rayTrace(int width, int height, ArrayList<Object3D> list){
+    public BufferedImage rayTrace(int width, int height, Vertex cameraOrigin, Vertex cameraDirection, ArrayList<Object3D> list){
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        for(float y = 0; y < height; y += 1){
-            for(float x = 0; x < width; x += 1){
-                Vertex dest = new Vertex((float)(((x)/500)-0.5), (float)(((y)/500)-0.5), 1);
+        for(float z = (height/2)-1; z >= -height/2; z -= 1){
+            for(float x = -width/2; x < width/2; x += 1){
+                Vertex dest = cameraDirection.subtract(new Vertex(x*fov, 0, -z*fov));
                 dest.normalize();
                 //System.out.println(dest.toString());
-                bi.setRGB((int)x, (int)y, trace(Vertex.NULL, dest, list).getRGB());
+                bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(cameraOrigin, dest, list).getRGB());
             }
         }
         return bi;

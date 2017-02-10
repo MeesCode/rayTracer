@@ -18,6 +18,14 @@ public class createObject3D {
             e.printStackTrace();
         }
 
+        for(Object3D o: objects){
+            for(Vertex v: o.getVertices()){
+                if(v.getVertexNormal().getLength() != 0){
+                    v.getVertexNormal().normalize();
+                }
+            }
+        }
+
         return objects;
     }
 
@@ -25,7 +33,6 @@ public class createObject3D {
         BufferedReader br = new BufferedReader(new FileReader(f));
 
         String line = br.readLine();
-
 
         int indexOffset = 0;
         int tempIndex = 0;
@@ -45,7 +52,8 @@ public class createObject3D {
             }
 
             if(parts[0].equals("v")){
-                objects.get(objects.size()-1).addVertex(new Vertex(Float.parseFloat(parts[1]), Float.parseFloat(parts[3]), Float.parseFloat(parts[2])));
+                Vertex temp = new Vertex(Float.parseFloat(parts[1]), Float.parseFloat(parts[3]), Float.parseFloat(parts[2]));
+                objects.get(objects.size()-1).addVertex(temp);
                 tempIndex++;
             }
 
@@ -65,12 +73,15 @@ public class createObject3D {
             }
 
             if(parts[0].equals("f")){
-                ArrayList<Vertex> vertices = new ArrayList<>();
-                int index = Integer.parseInt(parts[1].split("//")[1]) - 1 - indexOffsetNormal;
-                for(int i = 1; i < parts.length; i++){
-                    vertices.add(objects.get(objects.size()-1).getVertices().get(Integer.parseInt(parts[i].split("//")[0]) - 1 - indexOffset));
+                ArrayList<Vertex> verticesTemp = new ArrayList<>();
+                int faceIndex = Integer.parseInt(parts[1].split("//")[1]);
+                Vertex normal = objects.get(objects.size()-1).getNormals().get(faceIndex - 1 - indexOffsetNormal);
+                for(int i = 1; i < 4; i++){
+                    int vertexIndex = Integer.parseInt(parts[i].split("//")[0]) - 1 - indexOffset;
+                    verticesTemp.add(objects.get(objects.size()-1).getVertices().get(vertexIndex));
+                    objects.get(objects.size()-1).getVertices().get(vertexIndex).setVertexNormal(objects.get(objects.size()-1).getVertices().get(vertexIndex).getVertexNormal().add(normal));
                 }
-                objects.get(objects.size()-1).addFace(new Face(vertices, objects.get(objects.size()-1).getNormals().get(index)));
+                objects.get(objects.size()-1).addFace(new Face(verticesTemp, normal));
             }
 
             line = br.readLine();

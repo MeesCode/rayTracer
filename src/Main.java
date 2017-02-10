@@ -13,21 +13,13 @@ public class Main {
 
         list = createObject3D.read(new File("cube.obj"), new File("cube.mtl"));
 
-        /*for(Object3D o: list){
-            System.out.println(o.getName());
-            for(Face f: o.getFaces()){
-                System.out.println("\tface:");
-                System.out.println("\t\tnormal: " + f.getNormal());
-                for(Vertex v: f.getVertices()){
-                    System.out.println("\t\t" + v.toString());
-                }
-            }
-        }*/
-
         Window w = new Window();
         rayTracer r = new rayTracer();
 
-        w.drawImage(r.rayTrace(500, 500, list));
+        Vertex cameraOrigin = new Vertex(0, 0, 1);
+        Vertex cameraDirection = new Vertex(0, 1, 0);
+
+        w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list));
 
         //r.rayTraceTest(list);
 

@@ -4,6 +4,7 @@
 public class Vertex {
     private float x, y, z;
     public static Vertex NULL = new Vertex(0, 0, 0);
+    Vertex vertexNormal = Vertex.NULL;
 
     public Vertex(float x, float y, float z) {
 
@@ -24,6 +25,14 @@ public class Vertex {
         return z;
     }
 
+    public void setVertexNormal(Vertex normal){
+        vertexNormal = normal;
+    }
+
+    public Vertex getVertexNormal(){
+        return vertexNormal;
+    }
+
     public String toString(){
         return "x: " + x + ", y: " + y + ", z: " + z;
     }
@@ -34,6 +43,10 @@ public class Vertex {
 
     public Vertex add(Vertex that){
         return new Vertex(x + that.getX(), y + that.getY(), z + that.getZ());
+    }
+
+    public Vertex add(float that){
+        return new Vertex(x + that, y + that, z + that);
     }
 
     public float dotProduct(Vertex that){

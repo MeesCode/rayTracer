@@ -19,4 +19,12 @@ public class Face {
     public Vertex getNormal() {
         return normal;
     }
+
+    public Face copy(){
+        return new Face(new ArrayList<>(vertices), new Vertex(normal.getX(), normal. getY(), normal.getZ()));
+    }
+
+    public void setNormal(Vertex normal) {
+        this.normal = normal;
+    }
 }
