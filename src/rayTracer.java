@@ -8,12 +8,18 @@ public class rayTracer {
 
     ArrayList<Object3D> list = new ArrayList<>();
     float fov = 0.002f;
-    float threshold = 0.00001f;
+    float threshold = 0.000004f;
     float ambientLight = 0.1f;
     ArrayList<Light> lights = new ArrayList<>();
+    int level = 4;
 
     Vertex cameraOrigin;
     Vertex cameraDirection;
+
+    private Vertex reflectRay(Vertex origin, Vertex direction, Vertex normal){
+        Vertex ray = direction.subtract(origin);
+        return ray.subtract(normal.multiply(normal.dotProduct(ray)).multiply(2));
+    }
 
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         float distance;
@@ -123,20 +129,31 @@ public class rayTracer {
         return Math.abs(distanceExpected - minDistance) > threshold;
     }
 
-    private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
+    private Color3D shade(int level, Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
 
         Color3D total = Color3D.black;
 
         for(Light light: lights) {
-            si.getFace().setNormal(smoothNormal(si));
 
+            si.getFace().setNormal(smoothNormal(si));
             if (isShadow(si.getHitpoint(), light))
                 continue;
 
             Color3D directLight = directLight(rayOrigin, rayDirection, si, light);
             Color3D specularLight = specularLight(rayOrigin, rayDirection, si, light);
 
-            total = total.add(directLight.add(specularLight));
+            if(si.getMaterial().getIllum() == 3 || si.getMaterial().getIllum() == 4){
+                Vertex reflectedRay = reflectRay(rayOrigin, rayDirection, si.getFace().getNormal());
+                reflectedRay = si.getHitpoint().add(reflectedRay);
+                Color3D reflectedLight = trace(level - 1, si.getHitpoint().add(reflectedRay.multiply(threshold)), reflectedRay);
+                float mirror = si.getMaterial().getNs()/1000;
+                reflectedLight = reflectedLight.multiply(mirror);
+                //System.out.println(reflectedLight.toString());
+                directLight = directLight.multiply(1 - mirror);
+                total = total.add(directLight.add(specularLight).add(reflectedLight));
+            } else {
+                total = total.add(directLight.add(specularLight));
+            }
         }
 
         return total;
@@ -162,7 +179,11 @@ public class rayTracer {
         return result;
     }
 
-    private Color3D trace(Vertex rayOrigin, Vertex rayDirection){
+    private Color3D trace(int level, Vertex rayOrigin, Vertex rayDirection){
+        if(level == 0){
+            return Color3D.black;
+        }
+
         float minDistance = Float.MAX_VALUE;
         shadeInfo closest = null;
         for(Object3D o: list){
@@ -178,7 +199,7 @@ public class rayTracer {
         if(closest == null) {
             return Color3D.black;
         } else {
-            return shade(rayOrigin, rayDirection, closest);
+            return shade(level, rayOrigin, rayDirection, closest);
         }
     }
 
@@ -194,7 +215,7 @@ public class rayTracer {
                 Vertex dest = cameraDirection.subtract(new Vertex(-x*fov, 0, z*fov));
                 dest.normalize();
                 //System.out.println(dest.toString());
-                bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(cameraOrigin, dest).getRGB());
+                bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(level, cameraOrigin, dest).getRGB());
             }
         }
         return bi;

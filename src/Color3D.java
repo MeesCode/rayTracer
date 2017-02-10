@@ -54,4 +54,8 @@ public class Color3D extends Color {
 
         return new Color3D(red, green, blue);
     }
+
+    public String toString(){
+        return "r: " + this.getRed() + ", g: " + this.getGreen() + ", b: " + this.getBlue();
+    }
 }
