@@ -65,6 +65,12 @@ public class Vertex {
                           ((x * that.getY()) - (y * that.getX())));
     }
 
+    public float distance(Vertex v){
+        return (float)Math.sqrt(Math.pow(this.getX() - v.getX(), 2) +
+                Math.pow(this.getY() - v.getY(), 2) +
+                Math.pow(this.getZ() - v.getZ(), 2));
+    }
+
     public float getLength(){
         return (float) Math.sqrt(x*x + y*y + z*z);
     }

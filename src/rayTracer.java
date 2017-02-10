@@ -59,9 +59,7 @@ public class rayTracer {
                 return null;
             }
 
-            Float distance = (float)Math.sqrt(Math.pow(rayOrigin.getX() - cords.getX(), 2) +
-                                              Math.pow(rayOrigin.getY() - cords.getY(), 2) +
-                                              Math.pow(rayOrigin.getZ() - cords.getZ(), 2));
+            Float distance = rayOrigin.distance(cords);
 
             Vertex bCords = new Vertex(r, t, 0);
 
@@ -111,23 +109,18 @@ public class rayTracer {
         float minDistance = Float.MAX_VALUE;
         Vertex direction = new Vertex(hitPoint).subtract(light);
         direction.normalize();
-        shadeInfo closest = null;
+
+        float distanceExpected = light.distance(hitPoint);
+
         for(Object3D o: list){
             for(Face f: o.getFaces()){
                 shadeInfo temp = triangleIntersect(f, light, direction);
                 if(temp != null && temp.getDistance() < minDistance){
-                    closest = temp;
                     minDistance = temp.getDistance();
                 }
             }
         }
-        if(closest != null &&
-                (Math.abs(hitPoint.getX() - closest.getHitpoint().getX()) > threshold ||
-                Math.abs(hitPoint.getY() - closest.getHitpoint().getY()) > threshold ||
-                Math.abs(hitPoint.getZ() - closest.getHitpoint().getZ()) > threshold)){
-            return true;
-        }
-        return false;
+        return Math.abs(distanceExpected - minDistance) > threshold;
     }
 
     private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
