@@ -7,10 +7,10 @@ import java.util.ArrayList;
 public class rayTracer {
 
     ArrayList<Object3D> list = new ArrayList<>();
-    Vertex light = new Vertex(-2, 2, 3);
     float fov = 0.002f;
     float threshold = 0.00001f;
     float ambientLight = 0.1f;
+    ArrayList<Light> lights = new ArrayList<>();
 
     Vertex cameraOrigin;
     Vertex cameraDirection;
@@ -74,9 +74,9 @@ public class rayTracer {
 
     }
 
-    private Color3D directLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si){
+    private Color3D directLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si, Light light){
 
-        Vertex direction = light.subtract(si.getHitpoint());
+        Vertex direction = light.getPosition().subtract(si.getHitpoint());
         direction.normalize();
         float intensity = si.getFace().getNormal().dotProduct(direction);
 
@@ -84,11 +84,11 @@ public class rayTracer {
             return new Color3D(0, 0, 0);
         }
 
-        return si.getMaterial().getKd().multiply(intensity);
+        return si.getMaterial().getKd().multiply(intensity).multiply(light.getIntensity());
     }
 
-    private Color3D specularLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si){
-        Vertex direction = light.subtract(si.getHitpoint());
+    private Color3D specularLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si, Light light){
+        Vertex direction = light.getPosition().subtract(si.getHitpoint());
         direction.normalize();
 
         Vertex viewDir = cameraOrigin.subtract(si.getHitpoint());
@@ -98,23 +98,23 @@ public class rayTracer {
         float NdotH = H.dotProduct(si.getFace().getNormal());
 
         if (NdotH < 0) {
-            return new Color3D(0, 0, 0);
+            return Color3D.black;
         }
 
         float intensity = (float)Math.pow(NdotH, si.getMaterial().getNs());
-        return si.getMaterial().getKs().multiply(intensity);
+        return si.getMaterial().getKs().multiply(intensity).multiply(light.getIntensity());
     }
 
-    public boolean isShadow(Vertex hitPoint){
+    public boolean isShadow(Vertex hitPoint, Light light){
         float minDistance = Float.MAX_VALUE;
-        Vertex direction = new Vertex(hitPoint).subtract(light);
+        Vertex direction = new Vertex(hitPoint).subtract(light.getPosition());
         direction.normalize();
 
-        float distanceExpected = light.distance(hitPoint);
+        float distanceExpected = light.getPosition().distance(hitPoint);
 
         for(Object3D o: list){
             for(Face f: o.getFaces()){
-                shadeInfo temp = triangleIntersect(f, light, direction);
+                shadeInfo temp = triangleIntersect(f, light.getPosition(), direction);
                 if(temp != null && temp.getDistance() < minDistance){
                     minDistance = temp.getDistance();
                 }
@@ -125,16 +125,21 @@ public class rayTracer {
 
     private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
 
-        //smooth shading
-        si.getFace().setNormal(smoothNormal(si));
+        Color3D total = Color3D.black;
 
-        Color3D directLight = directLight(rayOrigin, rayDirection, si);
-        if(isShadow(si.getHitpoint())){
-            return directLight.multiply(ambientLight);
+        for(Light light: lights) {
+            si.getFace().setNormal(smoothNormal(si));
+
+            if (isShadow(si.getHitpoint(), light))
+                continue;
+
+            Color3D directLight = directLight(rayOrigin, rayDirection, si, light);
+            Color3D specularLight = specularLight(rayOrigin, rayDirection, si, light);
+
+            total = total.add(directLight.add(specularLight));
         }
 
-        Color3D specularLight = specularLight(rayOrigin, rayDirection, si);
-        return directLight.add(specularLight);
+        return total;
     }
 
     public Vertex smoothNormal(shadeInfo si){
@@ -171,16 +176,17 @@ public class rayTracer {
             }
         }
         if(closest == null) {
-            return new Color3D(0, 0, 0);
+            return Color3D.black;
         } else {
             return shade(rayOrigin, rayDirection, closest);
         }
     }
 
-    public BufferedImage rayTrace(int width, int height, Vertex cameraOrigin, Vertex cameraDirection, ArrayList<Object3D> list){
+    public BufferedImage rayTrace(int width, int height, Vertex cameraOrigin, Vertex cameraDirection, ArrayList<Object3D> list, ArrayList<Light> lights){
         this.cameraOrigin = cameraOrigin;
         this.cameraDirection = cameraDirection;
         this.list = list;
+        this.lights = lights;
 
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for(float z = (height/2)-1; z >= -height/2; z -= 1){

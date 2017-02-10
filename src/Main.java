@@ -16,11 +16,15 @@ public class Main {
         Window w = new Window();
         rayTracer r = new rayTracer();
 
+        ArrayList<Light> lights = new ArrayList<>();
+        lights.add(new Light(new Vertex(-2, 2, 3), Color3D.white, 0.5f));
+        lights.add(new Light(new Vertex(2, 2, 3), Color3D.white, 0.5f));
+
         Vertex cameraOrigin = new Vertex(0, -1, 3);
         Vertex cameraDirection = new Vertex(-.1f, 1, -.3f);
         cameraDirection.normalize();
 
-        w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list));
+        w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list, lights));
 
     }
 
