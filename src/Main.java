@@ -16,8 +16,9 @@ public class Main {
         Window w = new Window();
         rayTracer r = new rayTracer();
 
-        Vertex cameraOrigin = new Vertex(0, 0, 1);
-        Vertex cameraDirection = new Vertex(0, 1, 0);
+        Vertex cameraOrigin = new Vertex(0, -1, 3);
+        Vertex cameraDirection = new Vertex(0, 1, -.3f);
+        cameraDirection.normalize();
 
         w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list));
 

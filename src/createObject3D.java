@@ -25,6 +25,7 @@ public class createObject3D {
                 }
             }
         }
+        System.out.println("done loading model");
 
         return objects;
     }
@@ -52,13 +53,13 @@ public class createObject3D {
             }
 
             if(parts[0].equals("v")){
-                Vertex temp = new Vertex(Float.parseFloat(parts[1]), Float.parseFloat(parts[3]), Float.parseFloat(parts[2]));
+                Vertex temp = new Vertex(Float.parseFloat(parts[1]), -Float.parseFloat(parts[3]), Float.parseFloat(parts[2]));
                 objects.get(objects.size()-1).addVertex(temp);
                 tempIndex++;
             }
 
             if(parts[0].equals("vn")){
-                Vertex normal = new Vertex(Float.parseFloat(parts[1]), Float.parseFloat(parts[3]), Float.parseFloat(parts[2]));
+                Vertex normal = new Vertex(Float.parseFloat(parts[1]), -Float.parseFloat(parts[3]), Float.parseFloat(parts[2]));
                 normal.normalize();
                 objects.get(objects.size()-1).addNormal(normal);
                 tempIndexNormal++;

@@ -6,23 +6,24 @@ import java.util.ArrayList;
  */
 public class rayTracer {
 
-    Vertex light = new Vertex(0, -1.5f, 1);
+    Vertex light = new Vertex(-1, 2, 3);
     float fov = 0.002f;
+
+    Vertex cameraOrigin;
+    Vertex cameraDirection;
 
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
         float distance;
         float D = face.getNormal().dotProduct(face.getVertices().get(0));
-        //System.out.println(D);
         float divisor = rayDirection.dotProduct(face.getNormal());
 
         if(Math.abs(divisor) < 1E-7){
             return null;
         } else {
             distance = (D - rayOrigin.dotProduct(face.getNormal())) / divisor;
-            if(distance > 0){
+            if(distance < 0){
                 return null;
             }
-            //System.out.println(distance);
             return rayDirection.multiply(distance).add(rayOrigin);
         }
     }
@@ -84,9 +85,31 @@ public class rayTracer {
         return si.getMaterial().getKd().multiply(intensity);
     }
 
+    private Color3D specularLight(Vertex rayOrigin, Vertex rayDestination, shadeInfo si){
+        Vertex direction = light.subtract(si.getHitpoint());
+        direction.normalize();
+
+        Vertex viewDir = cameraOrigin.subtract(si.getHitpoint());
+        Vertex H = direction.add(viewDir);
+        H.normalize();
+
+        float NdotH = H.dotProduct(si.getFace().getNormal());
+
+        if (NdotH < 0) {
+            return new Color3D(0, 0, 0);
+        }
+
+        float intensity = (float)Math.pow(NdotH, si.getMaterial().getNs());
+        return si.getMaterial().getKs().multiply(intensity);
+    }
+
     private Color3D shade(Vertex rayOrigin, Vertex rayDirection, shadeInfo si){
+        //smooth shading
         si.getFace().setNormal(smoothNormal(si));
-        return directLight(rayOrigin, rayDirection, si);
+
+        Color3D directLight = directLight(rayOrigin, rayDirection, si);
+        Color3D specularLight = specularLight(rayOrigin, rayDirection, si);
+        return directLight.add(specularLight);
     }
 
     public Vertex smoothNormal(shadeInfo si){
@@ -130,10 +153,13 @@ public class rayTracer {
     }
 
     public BufferedImage rayTrace(int width, int height, Vertex cameraOrigin, Vertex cameraDirection, ArrayList<Object3D> list){
+        this.cameraOrigin = cameraOrigin;
+        this.cameraDirection = cameraDirection;
+
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for(float z = (height/2)-1; z >= -height/2; z -= 1){
             for(float x = -width/2; x < width/2; x += 1){
-                Vertex dest = cameraDirection.subtract(new Vertex(x*fov, 0, -z*fov));
+                Vertex dest = cameraDirection.subtract(new Vertex(-x*fov, 0, z*fov));
                 dest.normalize();
                 //System.out.println(dest.toString());
                 bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(cameraOrigin, dest, list).getRGB());

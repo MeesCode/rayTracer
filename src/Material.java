@@ -34,7 +34,7 @@ public class Material {
         Ns = ns;
     }
 
-    public Color getKa() {
+    public Color3D getKa() {
         return Ka;
     }
 
@@ -50,7 +50,7 @@ public class Material {
         Kd = kd;
     }
 
-    public Color getKs() {
+    public Color3D getKs() {
         return Ks;
     }
 
@@ -58,7 +58,7 @@ public class Material {
         Ks = ks;
     }
 
-    public Color getKe() {
+    public Color3D getKe() {
         return Ke;
     }
 
