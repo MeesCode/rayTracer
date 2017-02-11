@@ -33,6 +33,9 @@ public class Color3D extends Color {
         red = Math.min(red, 255);
         green = Math.min(green, 255);
         blue = Math.min(blue, 255);
+        red = Math.max(red, 0);
+        green = Math.max(green, 0);
+        blue = Math.max(blue, 0);
 
         return new Color3D(red, green, blue);
     }

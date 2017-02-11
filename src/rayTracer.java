@@ -17,8 +17,7 @@ public class rayTracer {
     Vertex cameraDirection;
 
     private Vertex reflectRay(Vertex origin, Vertex direction, Vertex normal){
-        Vertex ray = direction.subtract(origin);
-        return ray.subtract(normal.multiply(normal.dotProduct(ray)).multiply(2));
+        return direction.subtract(normal.multiply(2).multiply(direction.dotProduct(normal)));
     }
 
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
@@ -141,19 +140,17 @@ public class rayTracer {
 
             Color3D directLight = directLight(rayOrigin, rayDirection, si, light);
             Color3D specularLight = specularLight(rayOrigin, rayDirection, si, light);
+            Color3D reflectedLight = Color3D.black;
 
             if(si.getMaterial().getIllum() == 3 || si.getMaterial().getIllum() == 4){
                 Vertex reflectedRay = reflectRay(rayOrigin, rayDirection, si.getFace().getNormal());
-                reflectedRay = si.getHitpoint().add(reflectedRay);
-                Color3D reflectedLight = trace(level - 1, si.getHitpoint().add(reflectedRay.multiply(threshold)), reflectedRay);
+                reflectedLight = trace(level - 1, si.getHitpoint().add(reflectedRay.multiply(threshold)), reflectedRay);
                 float mirror = si.getMaterial().getNs()/1000;
                 reflectedLight = reflectedLight.multiply(mirror);
-                //System.out.println(reflectedLight.toString());
                 directLight = directLight.multiply(1 - mirror);
-                total = total.add(directLight.add(specularLight).add(reflectedLight));
-            } else {
-                total = total.add(directLight.add(specularLight));
             }
+
+            total = total.add(directLight.add(specularLight).add(reflectedLight));
         }
 
         return total;

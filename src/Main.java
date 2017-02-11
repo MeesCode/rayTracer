@@ -11,17 +11,18 @@ public class Main {
 
     public static void main(String[] args){
 
-        list = createObject3D.read(new File("cube.obj"), new File("cube.mtl"));
+        list = createObject3D.read(new File("cornell.obj"), new File("cornell.mtl"));
 
         Window w = new Window();
         rayTracer r = new rayTracer();
 
         ArrayList<Light> lights = new ArrayList<>();
-        lights.add(new Light(new Vertex(-2, 2, 3), Color3D.white, 0.5f));
-        lights.add(new Light(new Vertex(2, 2, 3), Color3D.white, 0.5f));
+        lights.add(new Light(new Vertex(0.8f, 1.2f, 1.8f), Color3D.white, .5f));
+        lights.add(new Light(new Vertex(-0.8f, 1.2f, 1.8f), Color3D.white, .5f));
 
-        Vertex cameraOrigin = new Vertex(0, -1, 3);
-        Vertex cameraDirection = new Vertex(-.1f, 1, -.3f);
+
+        Vertex cameraOrigin = new Vertex(0, -1.05f, 1);
+        Vertex cameraDirection = new Vertex(0, 1, 0);
         cameraDirection.normalize();
 
         w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list, lights));
