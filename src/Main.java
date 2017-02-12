@@ -20,12 +20,15 @@ public class Main {
         lights.add(new Light(new Vertex(0.8f, 1.2f, 1.8f), Color3D.white, .5f));
         lights.add(new Light(new Vertex(-0.8f, 1.2f, 1.8f), Color3D.white, .5f));
 
+        //lights.add(new Light(new Vertex(1, 0, 1), Color3D.white, 1));
 
-        Vertex cameraOrigin = new Vertex(0, -1.05f, 1);
+
+        Vertex cameraOrigin = new Vertex(0, -1.1f, 1);
         Vertex cameraDirection = new Vertex(0, 1, 0);
         cameraDirection.normalize();
 
         w.drawImage(r.rayTrace(500, 500, cameraOrigin, cameraDirection, list, lights));
+
 
     }
 

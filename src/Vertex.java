@@ -92,4 +92,8 @@ public class Vertex {
         return new Vertex(x*f, y*f, z*f);
     }
 
+    public Vertex multiply(Vertex v){
+        return new Vertex(x * v.getX(), y * v.getY(), z * v.getZ());
+    }
+
 }

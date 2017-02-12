@@ -8,16 +8,44 @@ public class rayTracer {
 
     ArrayList<Object3D> list = new ArrayList<>();
     float fov = 0.002f;
-    float threshold = 0.000004f;
+    float threshold = 0.00004f;
     float ambientLight = 0.1f;
     ArrayList<Light> lights = new ArrayList<>();
-    int level = 4;
+    int level = 3;
 
     Vertex cameraOrigin;
     Vertex cameraDirection;
 
-    private Vertex reflectRay(Vertex origin, Vertex direction, Vertex normal){
-        return direction.subtract(normal.multiply(2).multiply(direction.dotProduct(normal)));
+    private Vertex reflectRay(Vertex direction, Vertex normal){
+        Vertex reflection = direction.subtract(normal.multiply(2).multiply(direction.dotProduct(normal)));
+        reflection.normalize();
+        return reflection;
+    }
+
+    private Vertex refractRay(Vertex direction, shadeInfo si){
+
+        Vertex normal = si.getFace().getNormal();
+        float eta;
+        if(direction.dotProduct(normal) <= 0){
+            eta = 1/1.6f;
+        } else {
+            eta = 1.6f;
+            normal = normal.multiply(-1);
+        }
+
+        float c1 = -direction.dotProduct(normal);
+        float cs2 = 1 - eta * eta * (1 - c1 * c1);
+
+        if(cs2 < 0){
+             return reflectRay(direction, normal);
+        }
+
+        Vertex a = direction.multiply(eta);
+        Vertex b = normal.multiply((float)(eta * c1 - Math.sqrt(cs2)));
+        Vertex c = a.add(b);
+        c.normalize();
+
+        return c;
     }
 
     private Vertex planeIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
@@ -25,15 +53,11 @@ public class rayTracer {
         float D = face.getNormal().dotProduct(face.getVertices().get(0));
         float divisor = rayDirection.dotProduct(face.getNormal());
 
-        if(Math.abs(divisor) < 1E-7){
+        distance = (D - rayOrigin.dotProduct(face.getNormal())) / divisor;
+        if(distance < 0){
             return null;
-        } else {
-            distance = (D - rayOrigin.dotProduct(face.getNormal())) / divisor;
-            if(distance < 0){
-                return null;
-            }
-            return rayDirection.multiply(distance).add(rayOrigin);
         }
+        return rayDirection.multiply(distance).add(rayOrigin);
     }
 
     private shadeInfo triangleIntersect(Face face, Vertex rayOrigin, Vertex rayDirection){
@@ -141,16 +165,25 @@ public class rayTracer {
             Color3D directLight = directLight(rayOrigin, rayDirection, si, light);
             Color3D specularLight = specularLight(rayOrigin, rayDirection, si, light);
             Color3D reflectedLight = Color3D.black;
+            Color3D refractedLight = Color3D.black;
 
             if(si.getMaterial().getIllum() == 3 || si.getMaterial().getIllum() == 4){
-                Vertex reflectedRay = reflectRay(rayOrigin, rayDirection, si.getFace().getNormal());
+                Vertex reflectedRay = reflectRay(rayDirection, si.getFace().getNormal());
                 reflectedLight = trace(level - 1, si.getHitpoint().add(reflectedRay.multiply(threshold)), reflectedRay);
                 float mirror = si.getMaterial().getNs()/1000;
                 reflectedLight = reflectedLight.multiply(mirror);
                 directLight = directLight.multiply(1 - mirror);
             }
 
-            total = total.add(directLight.add(specularLight).add(reflectedLight));
+            if(si.getMaterial().getIllum() == 4 || si.getMaterial().getIllum() == 5){
+                Vertex refractedRay = refractRay(rayDirection, si);
+                refractedLight = trace(level - 1, si.getHitpoint().add(refractedRay.multiply(threshold)), refractedRay);
+                float opacity = si.getMaterial().getD();
+                refractedLight = refractedLight.multiply(1 - opacity);
+                directLight = directLight.multiply(opacity);
+            }
+
+            total = total.add(directLight.add(specularLight).add(reflectedLight).add(refractedLight));
         }
 
         return total;
@@ -211,8 +244,10 @@ public class rayTracer {
             for(float x = -width/2; x < width/2; x += 1){
                 Vertex dest = cameraDirection.subtract(new Vertex(-x*fov, 0, z*fov));
                 dest.normalize();
-                //System.out.println(dest.toString());
                 bi.setRGB((int)(x+width/2), (int)(z+height/2), trace(level, cameraOrigin, dest).getRGB());
+            }
+            if(z%10 == 0){
+                System.out.println((int)(height/2 - z) + "/" + height);
             }
         }
         return bi;
